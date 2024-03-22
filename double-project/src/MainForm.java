@@ -12,7 +12,6 @@ final class MainForm extends JFrame {
     MainForm() {
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setVisible(true);
-        this.setResizable(false);
         this.setTitle("Double Project");
         this.setMinimumSize(new Dimension(800, 600));
         this.add(mainPanel);

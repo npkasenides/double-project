@@ -6,22 +6,22 @@ import java.util.*;
 
 final class Dictionary {
     private final List<String[]> data;
-    private List<String[]> testSet;
-    private List<String[]> trainSet;
     private final float priorSpamProbability;
     private final float priorHamProbability;
     // String: word, Float: spam probability
-    private HashMap<String, Float> wordSpamcities;
+    private final HashMap<String, Float> wordSpamcities;
     // String: word, Float: ham probability
-    private HashMap<String, Float> wordHamcities;
-    private HashMap<String, Float> generalWordOccurrence;
+    private final HashMap<String, Float> wordHamcities;
+    private final HashMap<String, Float> generalWordOccurrence;
     // String: word, Float: likelihood ratio of a word
-    private HashMap<String, Float> wordLikelihoodRatios;
-    private HashMap<String, Integer> generalWordFrequencies;
+    private final HashMap<String, Float> wordLikelihoodRatios;
+    private final HashMap<String, Integer> generalWordFrequencies;
     // Integer: word, Float: number of times a word is included in a spam mail at least once
-    private HashMap<String, Integer> wordSpamFrequencies;
+    private final HashMap<String, Integer> wordSpamFrequencies;
     // Integer: word, Float: number of times a word is included in a ham mail at least once
-    private HashMap<String, Integer> wordHamFrequencies;
+    private final HashMap<String, Integer> wordHamFrequencies;
+    private List<String[]> testSet;
+    private List<String[]> trainSet;
 
     Dictionary() {
         // read CSV email dataset
@@ -95,11 +95,22 @@ final class Dictionary {
         }
     }
 
+    List<String> sanitize(String mail) {
+        List<String> fillerWords = Arrays.asList("i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "you're", "you've", "you'll", "you'd", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "she's", "her", "hers", "herself", "it", "it's", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "that'll", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "don't", "should", "should've", "now", "d", "ll", "m", "o", "re", "ve", "y", "ain", "aren", "aren't", "couldn", "couldn't", "didn", "didn't", "doesn", "doesn't", "hadn", "hadn't", "hasn", "hasn't", "haven", "haven't", "isn", "isn't", "ma", "mightn", "mightn't", "mustn", "mustn't", "needn", "needn't", "shan", "shan't", "shouldn", "shouldn't", "wasn", "wasn't", "weren", "weren't", "won", "won't", "wouldn", "wouldn't");
+        String s1 = mail.toLowerCase();
+        String s2 = s1;
+        for (String s : fillerWords) {
+            s2 = s2.replaceAll(s, "");
+        }
+        s2 = s2.replaceAll("\\(\\).,\\[]", "");
+        return Arrays.asList(s2.split(" "));
+    }
+
     float calcPosteriorSpamProbability(String mail) {
         if (Objects.equals(mail, "")) {
             return 0.0f;
         }
-        List<String> words = Arrays.asList(mail.split(","));
+        List<String> words = sanitize(mail);
         float numerator = 1.0f;
         float denominator = 1.0f;
         for (int i = 0; i < words.size(); i++) {
