@@ -29,9 +29,10 @@ final class Dictionary {
         data = new ArrayList<>();
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
-            String line;
-            while ((line = br.readLine()) != null) {
+            String line = br.readLine();
+            while (line != null) {
                 data.add(line.split(","));
+                line = br.readLine();
             }
         } catch (Exception e) {
         }
@@ -40,7 +41,7 @@ final class Dictionary {
         int n_spam_mail = 0;
         for (int i = 1; i < data.size(); i++) {
             total_n_of_mail++;
-            if (Objects.equals(data.get(0)[i], "1")) {
+            if (Objects.equals(data.get(i)[0], "1")) {
                 n_spam_mail++;
             }
         }
@@ -48,47 +49,56 @@ final class Dictionary {
         priorSpamProbability = (float) n_spam_mail / total_n_of_mail;
         priorHamProbability = 1 - priorSpamProbability;
         // initialize word hash maps
+        wordSpamFrequencies = new HashMap<>();
+        wordHamFrequencies = new HashMap<>();
+        generalWordFrequencies = new HashMap<>();
         for (int i = 1; i < data.get(0).length; i++) {
             wordSpamFrequencies.put(data.get(0)[i], 0);
             wordHamFrequencies.put(data.get(0)[i], 0);
             generalWordFrequencies.put(data.get(0)[i], 0);
         }
         // count word occurrences in spam mail
-        for (int i = 1; i < data.size(); i++) {
-            for (int j = 1; j < data.get(i).length; j++) {
+        for (int i = 1; i < data.get(0).length; i++) {
+            for (int j = 1; j < data.size(); j++) {
                 // if the mail is spam
-                if (Objects.equals(data.get(0)[j], "1")) {
+                if (Objects.equals(data.get(j)[0], "1")) {
                     // if the the word is used in it more than once
-                    if (!Objects.equals(data.get(i)[j], "0")) {
+                    if (!Objects.equals(data.get(j)[i], "0")) {
                         // then increment its word count
-                        wordSpamFrequencies.put(data.get(0)[j], wordSpamFrequencies.get(data.get(0)[j]) + 1);
+                        wordSpamFrequencies.put(data.get(0)[i], wordSpamFrequencies.get(data.get(0)[i]) + 1);
                     }
                 } else {
-                    if (!Objects.equals(data.get(i)[j], "0")) {
+                    if (!Objects.equals(data.get(j)[i], "0")) {
                         // then increment its word count
-                        wordHamFrequencies.put(data.get(0)[j], wordHamFrequencies.get(data.get(0)[j]) + 1);
+                        wordHamFrequencies.put(data.get(0)[i], wordHamFrequencies.get(data.get(0)[i]) + 1);
                     }
-                    generalWordFrequencies.put(data.get(0)[j], generalWordFrequencies.get(data.get(0)[j]) + 1);
+                }
+                if (!Objects.equals(data.get(j)[i], "0")) {
+                    // then increment its word count
+                    generalWordFrequencies.put(data.get(0)[i], generalWordFrequencies.get(data.get(0)[i]) + 1);
                 }
             }
         }
         // calculate spam and ham probabilities of each word
-        for (int i = 1; i < data.size(); i++) {
+        wordSpamcities = new HashMap<>();
+        wordHamcities = new HashMap<>();
+        generalWordOccurrence = new HashMap<>();
+        for (int i = 1; i < data.get(0).length; i++) {
             wordSpamcities.put(data.get(0)[i], (float) wordSpamFrequencies.get(data.get(0)[i]) / n_spam_mail);
             wordHamcities.put(data.get(0)[i], (float) wordHamFrequencies.get(data.get(0)[i]) / n_ham_mail);
             generalWordOccurrence.put(data.get(0)[i], (float) generalWordFrequencies.get(data.get(0)[i]) / total_n_of_mail);
         }
         // calculate the likelihood ratio of each word
-        for (int i = 1; i < data.size(); i++) {
+        wordLikelihoodRatios = new HashMap<>();
+        for (int i = 1; i < data.get(0).length; i++) {
             wordLikelihoodRatios.put(data.get(0)[i], wordSpamcities.get(data.get(0)[i]) / generalWordOccurrence.get(data.get(0)[i]));
         }
     }
 
-    String getWordByIndex(int index) {
-        return data.get(0)[index];
-    }
-
     float calcPosteriorSpamProbability(String mail) {
+        if (Objects.equals(mail, "")) {
+            return 0.0f;
+        }
         List<String> words = Arrays.asList(mail.split(","));
         float numerator = 1.0f;
         float denominator = 1.0f;
